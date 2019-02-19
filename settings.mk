@@ -1,0 +1,9 @@
+export PARALLEL_JOBS := $(shell cat /proc/cpuinfo | grep cores | wc -l)
+export WORKSPACE_DIR := $(shell cd "$(dirname "$0")" && pwd)
+export PACKAGES_DIR := $(WORKSPACE_DIR)/packages
+export PATCHES_DIR := $(WORKSPACE_DIR)/patches
+export SCRIPTS_DIR := $(WORKSPACE_DIR)/scripts
+export OUTPUT_DIR := $(WORKSPACE_DIR)/out
+export BUILD_DIR := $(OUTPUT_DIR)/build
+export ROOTFS_DIR := $(OUTPUT_DIR)/rootfs
+export TOOLS_DIR := $(ROOTFS_DIR)/tools
