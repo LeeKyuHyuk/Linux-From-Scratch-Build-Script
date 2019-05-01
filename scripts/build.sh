@@ -171,18 +171,18 @@ chgrp -v utmp /var/log/lastlog
 chmod -v 664  /var/log/lastlog
 chmod -v 600  /var/log/btmp
 
-step "# 6.7. Linux-5.0.4 API Headers"
-extract /sources/linux-5.0.4.tar.xz /build
-make -j$PARALLEL_JOBS mrproper -C /build/linux-5.0.4
-make -j$PARALLEL_JOBS INSTALL_HDR_PATH=/build/linux-5.0.4/dest headers_install -C /build/linux-5.0.4
-find /build/linux-5.0.4/dest/include \( -name .install -o -name ..install.cmd \) -delete
-cp -rv /build/linux-5.0.4/dest/include/* /usr/include
-rm -rf /build/linux-5.0.4
+step "# 6.7. Linux-4.20.12 API Headers"
+extract /sources/linux-4.20.12.tar.xz /build
+make -j$PARALLEL_JOBS mrproper -C /build/linux-4.20.12
+make -j$PARALLEL_JOBS INSTALL_HDR_PATH=/build/linux-4.20.12/dest headers_install -C /build/linux-4.20.12
+find /build/linux-4.20.12/dest/include \( -name .install -o -name ..install.cmd \) -delete
+cp -rv /build/linux-4.20.12/dest/include/* /usr/include
+rm -rf /build/linux-4.20.12
 
-step "# 6.8. Man-pages-5.00"
-extract /sources/man-pages-5.00.tar.xz /build
-make -j$PARALLEL_JOBS install -C /build/man-pages-5.00
-rm -rf /build/man-pages-5.00
+step "# 6.8. Man-pages-4.16"
+extract /sources/man-pages-4.16.tar.xz /build
+make -j$PARALLEL_JOBS install -C /build/man-pages-4.16
+rm -rf /build/man-pages-4.16
 
 step "# 6.9. Glibc-2.29"
 extract /sources/glibc-2.29.tar.xz /build
@@ -229,26 +229,26 @@ rpc: files
 
 # End /etc/nsswitch.conf
 EOF
-mkdir -v /build/tzdata2019a
-extract /sources/tzdata2019a.tar.gz /build/tzdata2019a
+mkdir -v /build/tzdata2018i
+extract /sources/tzdata2018i.tar.gz /build/tzdata2018i
 ZONEINFO=/usr/share/zoneinfo
 mkdir -pv $ZONEINFO/{posix,right}
 
-for tz in /build/tzdata2019a/etcetera /build/tzdata2019a/southamerica \
-          /build/tzdata2019a/northamerica /build/tzdata2019a/europe \
-          /build/tzdata2019a/africa /build/tzdata2019a/antarctica  \
-          /build/tzdata2019a/asia /build/tzdata2019a/australasia \
-          /build/tzdata2019a/backward /build/tzdata2019a/pacificnew \
-          /build/tzdata2019a/systemv; do
+for tz in /build/tzdata2018i/etcetera /build/tzdata2018i/southamerica \
+          /build/tzdata2018i/northamerica /build/tzdata2018i/europe \
+          /build/tzdata2018i/africa /build/tzdata2018i/antarctica  \
+          /build/tzdata2018i/asia /build/tzdata2018i/australasia \
+          /build/tzdata2018i/backward /build/tzdata2018i/pacificnew \
+          /build/tzdata2018i/systemv; do
     zic -L /dev/null -d $ZONEINFO ${tz}
     zic -L /dev/null -d $ZONEINFO/posix ${tz}
-    zic -L /build/tzdata2019a/leapseconds -d $ZONEINFO/right ${tz}
+    zic -L /build/tzdata2018i/leapseconds -d $ZONEINFO/right ${tz}
 done
-cp -v /build/tzdata2019a/{zone.tab,zone1970.tab,iso3166.tab} $ZONEINFO
+cp -v /build/tzdata2018i/{zone.tab,zone1970.tab,iso3166.tab} $ZONEINFO
 zic -d $ZONEINFO -p America/New_York
 unset ZONEINFO
 ln -sfv /usr/share/zoneinfo/Asia/Seoul /etc/localtime
-rm -rf /build/tzdata2019a
+rm -rf /build/tzdata2018i
 cat > /etc/ld.so.conf << "EOF"
 # Begin /etc/ld.so.conf
 /usr/local/lib
@@ -420,35 +420,35 @@ grpconv
 sed -i 's/yes/no/' /etc/default/useradd
 rm -rf /build/shadow-4.6
 
-step "6.21. GCC-8.3.0"
-extract /sources/gcc-8.3.0.tar.xz /build
+step "6.21. GCC-8.2.0"
+extract /sources/gcc-8.2.0.tar.xz /build
 case $(uname -m) in
   x86_64)
     sed -e '/m64=/s/lib64/lib/' \
-        -i.orig /build/gcc-8.3.0/gcc/config/i386/t-linux64
+        -i.orig /build/gcc-8.2.0/gcc/config/i386/t-linux64
   ;;
 esac
 rm -f /usr/lib/gcc
-mkdir -v /build/gcc-8.3.0/build
-( cd /build/gcc-8.3.0/build && \
+mkdir -v /build/gcc-8.2.0/build
+( cd /build/gcc-8.2.0/build && \
 SED=sed \
-/build/gcc-8.3.0/configure \
+/build/gcc-8.2.0/configure \
 --prefix=/usr \
 --enable-languages=c,c++ \
 --disable-multilib \
 --disable-bootstrap \
 --disable-libmpx \
 --with-system-zlib )
-make -j$PARALLEL_JOBS -C /build/gcc-8.3.0/build
-make -j$PARALLEL_JOBS install -C /build/gcc-8.3.0/build
+make -j$PARALLEL_JOBS -C /build/gcc-8.2.0/build
+make -j$PARALLEL_JOBS install -C /build/gcc-8.2.0/build
 ln -sv ../usr/bin/cpp /lib
 ln -sv gcc /usr/bin/cc
 install -v -dm755 /usr/lib/bfd-plugins
-ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/8.3.0/liblto_plugin.so \
+ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/8.2.0/liblto_plugin.so \
         /usr/lib/bfd-plugins/
 mkdir -pv /usr/share/gdb/auto-load/usr/lib
 mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
-rm -rf /build/gcc-8.3.0
+rm -rf /build/gcc-8.2.0
 
 step "# 6.22. Bzip2-1.0.6"
 extract /sources/bzip2-1.0.6.tar.gz /build
@@ -811,35 +811,35 @@ make -j$PARALLEL_JOBS -C /build/libffi-3.2.1
 make -j$PARALLEL_JOBS install -C /build/libffi-3.2.1
 rm -rf /build/libffi-3.2.1
 
-step "# 6.50. OpenSSL-1.1.1b"
-extract /sources/openssl-1.1.1b.tar.gz /build
-( cd /build/openssl-1.1.1b && \
+step "# 6.50. OpenSSL-1.1.1a"
+extract /sources/openssl-1.1.1a.tar.gz /build
+( cd /build/openssl-1.1.1a && \
 ./config \
 --prefix=/usr         \
 --openssldir=/etc/ssl \
 --libdir=lib \
 shared \
 zlib-dynamic )
-make -j$PARALLEL_JOBS -C /build/openssl-1.1.1b
-sed -i '/INSTALL_LIBS/s/libcrypto.a libssl.a//' /build/openssl-1.1.1b/Makefile
-make -j$PARALLEL_JOBS MANSUFFIX=ssl install -C /build/openssl-1.1.1b
-rm -rf /build/openssl-1.1.1b
+make -j$PARALLEL_JOBS -C /build/openssl-1.1.1a
+sed -i '/INSTALL_LIBS/s/libcrypto.a libssl.a//' /build/openssl-1.1.1a/Makefile
+make -j$PARALLEL_JOBS MANSUFFIX=ssl install -C /build/openssl-1.1.1a
+rm -rf /build/openssl-1.1.1a
 
-step "# 6.51. Python-3.7.3"
-extract /sources/Python-3.7.3.tar.xz /build
-( cd /build/Python-3.7.3 && \
+step "# 6.51. Python-3.7.2"
+extract /sources/Python-3.7.2.tar.xz /build
+( cd /build/Python-3.7.2 && \
 ./configure \
 --prefix=/usr \
 --enable-shared \
 --with-system-expat \
 --with-system-ffi \
 --with-ensurepip=yes )
-make -j$PARALLEL_JOBS -C /build/Python-3.7.3
-make -j$PARALLEL_JOBS install -C /build/Python-3.7.3
+make -j$PARALLEL_JOBS -C /build/Python-3.7.2
+make -j$PARALLEL_JOBS install -C /build/Python-3.7.2
 chmod -v 755 /usr/lib/libpython3.7m.so
 chmod -v 755 /usr/lib/libpython3.so
 ln -sfv pip3.7 /usr/bin/pip3
-rm -rf /build/Python-3.7.3
+rm -rf /build/Python-3.7.2
 
 step "# 6.52. Ninja-1.9.0"
 export NINJAJOBS=$PARALLEL_JOBS
@@ -863,18 +863,18 @@ extract /sources/meson-0.49.2.tar.gz /build
 cp -rv /build/meson-0.49.2/dest/* /
 rm -rf /build/meson-0.49.2
 
-step "# 6.54. Coreutils-8.31"
-extract /sources/coreutils-8.31.tar.xz /build
-patch -Np1 -i /sources/coreutils-8.31-i18n-1.patch -d /build/coreutils-8.31
-sed -i '/test.lock/s/^/#/' /build/coreutils-8.31/gnulib-tests/gnulib.mk
-( cd /build/coreutils-8.31 && autoreconf -fiv )
-( cd /build/coreutils-8.31 && \
+step "# 6.54. Coreutils-8.30"
+extract /sources/coreutils-8.30.tar.xz /build
+patch -Np1 -i /sources/coreutils-8.30-i18n-1.patch -d /build/coreutils-8.30
+sed -i '/test.lock/s/^/#/' /build/coreutils-8.30/gnulib-tests/gnulib.mk
+( cd /build/coreutils-8.30 && autoreconf -fiv )
+( cd /build/coreutils-8.30 && \
 FORCE_UNSAFE_CONFIGURE=1 \
 ./configure \
 --prefix=/usr \
 --enable-no-install-program=kill,uptime )
-FORCE_UNSAFE_CONFIGURE=1 make -j$PARALLEL_JOBS -C /build/coreutils-8.31
-make -j$PARALLEL_JOBS install -C /build/coreutils-8.31
+FORCE_UNSAFE_CONFIGURE=1 make -j$PARALLEL_JOBS -C /build/coreutils-8.30
+make -j$PARALLEL_JOBS install -C /build/coreutils-8.30
 mv -v /usr/bin/{cat,chgrp,chmod,chown,cp,date,dd,df,echo} /bin
 mv -v /usr/bin/{false,ln,ls,mkdir,mknod,mv,pwd,rm} /bin
 mv -v /usr/bin/{rmdir,stty,sync,true,uname} /bin
@@ -882,7 +882,7 @@ mv -v /usr/bin/chroot /usr/sbin
 mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
 sed -i s/\"1\"/\"8\"/1 /usr/share/man/man8/chroot.8
 mv -v /usr/bin/{head,nice,sleep,touch} /bin
-rm -rf /build/coreutils-8.31
+rm -rf /build/coreutils-8.30
 
 step "# 6.55. Check-0.12.0"
 extract /sources/check-0.12.0.tar.gz /build
@@ -939,14 +939,14 @@ make -j$PARALLEL_JOBS install -C /build/gzip-1.10
 mv -v /usr/bin/gzip /bin
 rm -rf /build/gzip-1.10
 
-step "# 6.63. IPRoute2-5.0.0"
-extract /sources/iproute2-5.0.0.tar.xz /build
-sed -i /ARPD/d /build/iproute2-5.0.0/Makefile
-rm -fv /build/iproute2-5.0.0/man/man8/arpd.8
-sed -i 's/.m_ipt.o//' /build/iproute2-5.0.0/tc/Makefile
-make -j$PARALLEL_JOBS -C /build/iproute2-5.0.0
-make -j$PARALLEL_JOBS DOCDIR=/usr/share/doc/iproute2-5.0.0 install -C /build/iproute2-5.0.0
-rm -rf /build/iproute2-5.0.0
+step "# 6.63. IPRoute2-4.20.0"
+extract /sources/iproute2-4.20.0.tar.xz /build
+sed -i /ARPD/d /build/iproute2-4.20.0/Makefile
+rm -fv /build/iproute2-4.20.0/man/man8/arpd.8
+sed -i 's/.m_ipt.o//' /build/iproute2-4.20.0/tc/Makefile
+make -j$PARALLEL_JOBS -C /build/iproute2-4.20.0
+make -j$PARALLEL_JOBS DOCDIR=/usr/share/doc/iproute2-4.20.0 install -C /build/iproute2-4.20.0
+rm -rf /build/iproute2-4.20.0
 
 step "# 6.65. Libpipeline-1.5.1"
 extract /sources/libpipeline-1.5.1.tar.gz /build
@@ -976,39 +976,40 @@ make -j$PARALLEL_JOBS -C /build/patch-2.7.6
 make -j$PARALLEL_JOBS install -C /build/patch-2.7.6
 rm -rf /build/patch-2.7.6
 
-step "# 6.69. Tar-1.32"
-extract /sources/tar-1.32.tar.xz /build
-( cd /build/tar-1.32 && \
+step "# 6.69. tar-1.31"
+extract /sources/tar-1.31.tar.xz /build
+( cd /build/tar-1.31 && \
 FORCE_UNSAFE_CONFIGURE=1  \
 ./configure \
 --prefix=/usr \
 --bindir=/bin )
-make -j$PARALLEL_JOBS -C /build/tar-1.32
-make -j$PARALLEL_JOBS install -C /build/tar-1.32
-rm -rf /build/tar-1.32
+make -j$PARALLEL_JOBS -C /build/tar-1.31
+make -j$PARALLEL_JOBS install -C /build/tar-1.31
+rm -rf /build/tar-1.31
 
-step "# 6.70. Texinfo-6.6"
-extract /sources/texinfo-6.6.tar.xz /build
-( cd /build/texinfo-6.6 && \
+step "# 6.70. texinfo-6.5"
+extract /sources/texinfo-6.5.tar.xz /build
+( cd /build/texinfo-6.5 && \
 FORCE_UNSAFE_CONFIGURE=1  \
 ./configure \
 --prefix=/usr \
 --disable-static )
-make -j$PARALLEL_JOBS -C /build/texinfo-6.6
-make -j$PARALLEL_JOBS install -C /build/texinfo-6.6
-rm -rf /build/texinfo-6.6
+make -j$PARALLEL_JOBS -C /build/texinfo-6.5
+make -j$PARALLEL_JOBS install -C /build/texinfo-6.5
+rm -rf /build/texinfo-6.5
 
-step "# 6.72. Systemd-241"
-extract /sources/systemd-241.tar.gz /build
+step "# 6.72. Systemd-240"
+extract /sources/systemd-240.tar.gz /build
+patch -Np1 -i /sources/systemd-240-security_fixes-2.patch -d /build/systemd-240
 ln -sf /tools/bin/true /usr/bin/xsltproc
 for file in /tools/lib/lib{blkid,mount,uuid}*; do
     ln -sf $file /usr/lib/
 done
-extract /sources/systemd-man-pages-241.tar.xz /build/systemd-241
-sed '177,$ d' -i /build/systemd-241/src/resolve/meson.build
-sed -i 's/GROUP="render", //' /build/systemd-241/rules/50-udev-default.rules.in
-mkdir -v /build/systemd-241/build
-( cd /build/systemd-241/build && \
+extract /sources/systemd-man-pages-240.tar.bz2 /build/systemd-240
+sed '177,$ d' -i /build/systemd-240/src/resolve/meson.build
+sed -i 's/GROUP="render", //' /build/systemd-240/rules/50-udev-default.rules.in
+mkdir -pv /build/systemd-240/build
+( cd /build/systemd-240/build && \
 PKG_CONFIG_PATH="/usr/lib/pkgconfig:/tools/lib/pkgconfig" \
 LANG=en_US.UTF-8 \
 meson \
@@ -1032,8 +1033,8 @@ meson \
 -Dumount-path=/bin/umount    \
 -Db_lto=false \
 .. )
-( cd /build/systemd-241/build && LANG=en_US.UTF-8 ninja )
-( cd /build/systemd-241/build && LANG=en_US.UTF-8 ninja install )
+( cd /build/systemd-240/build && LANG=en_US.UTF-8 ninja )
+( cd /build/systemd-240/build && LANG=en_US.UTF-8 ninja install )
 rm -rfv /usr/lib/rpm
 rm -f /usr/bin/xsltproc
 systemd-machine-id-setup
@@ -1042,7 +1043,7 @@ cat > /lib/systemd/systemd-user-sessions << "EOF"
 rm -f /run/nologin
 EOF
 chmod 755 /lib/systemd/systemd-user-sessions
-rm -rf /build/systemd-241
+rm -rf /build/systemd-240
 
 step "# 6.73. D-Bus-1.12.12"
 extract /sources/dbus-1.12.12.tar.gz /build
@@ -1101,11 +1102,11 @@ make -j$PARALLEL_JOBS -C /build/util-linux-2.33.1
 make -j$PARALLEL_JOBS install -C /build/util-linux-2.33.1
 rm -rf /build/util-linux-2.33.1
 
-step "# 6.76. E2fsprogs-1.45.0"
-extract /sources/e2fsprogs-1.45.0.tar.gz /build
-mkdir -v /build/e2fsprogs-1.45.0/build
-( cd /build/e2fsprogs-1.45.0/build && \
-./configure \
+step "# 6.76. E2fsprogs-1.44.5"
+extract /sources/e2fsprogs-1.44.5.tar.gz /build
+mkdir -v /build/e2fsprogs-1.44.5/build
+( cd /build/e2fsprogs-1.44.5/build && \
+/build/e2fsprogs-1.44.5/configure \
 --prefix=/usr \
 --bindir=/bin \
 --with-root-prefix="" \
@@ -1114,8 +1115,8 @@ mkdir -v /build/e2fsprogs-1.45.0/build
 --disable-libuuid \
 --disable-uuidd \
 --disable-fsck )
-make -j$PARALLEL_JOBS -C /build/e2fsprogs-1.45.0/build
-make -j$PARALLEL_JOBS install -C /build/e2fsprogs-1.45.0/build
-make -j$PARALLEL_JOBS install-libs -C /build/e2fsprogs-1.45.0/build
+make -j$PARALLEL_JOBS -C /build/e2fsprogs-1.44.5/build
+make -j$PARALLEL_JOBS install -C /build/e2fsprogs-1.44.5/build
+make -j$PARALLEL_JOBS install-libs -C /build/e2fsprogs-1.44.5/build
 chmod -v u+w /usr/lib/{libcom_err,libe2p,libext2fs,libss}.a
-rm -rf /build/e2fsprogs-1.45.0
+rm -rf /build/e2fsprogs-1.44.5
