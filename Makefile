@@ -13,3 +13,6 @@ system:
 
 download:
 	@wget -c -i wget-list -P $(SOURCES_DIR)
+
+run:
+	qemu-system-x86_64 -kernel $(IMAGES_DIR)/bzImage -drive file=$(IMAGES_DIR)/rootfs.ext2,format=raw -append "root=/dev/sda"

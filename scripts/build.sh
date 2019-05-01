@@ -417,6 +417,7 @@ make -j$PARALLEL_JOBS install -C /build/shadow-4.6
 mv -v /usr/bin/passwd /bin
 pwconv
 grpconv
+echo 'root:lfs' | chpasswd
 sed -i 's/yes/no/' /etc/default/useradd
 rm -rf /build/shadow-4.6
 
@@ -1120,3 +1121,27 @@ make -j$PARALLEL_JOBS install -C /build/e2fsprogs-1.44.5/build
 make -j$PARALLEL_JOBS install-libs -C /build/e2fsprogs-1.44.5/build
 chmod -v u+w /usr/lib/{libcom_err,libe2p,libext2fs,libss}.a
 rm -rf /build/e2fsprogs-1.44.5
+
+step "[2/2] Linux Kernel 4.20.12"
+extract /sources/linux-4.20.12.tar.xz /build
+make -j$PARALLEL_JOBS ARCH=x86_64 mrproper -C /build/linux-4.20.12
+make -j$PARALLEL_JOBS ARCH=x86_64 x86_64_defconfig -C /build/linux-4.20.12
+# Step 1 - disable all active kernel compression options (should be only one).
+sed -i "s/.*\\(CONFIG_KERNEL_.*\\)=y/\\#\\ \\1 is not set/" /build/linux-4.20.12/.config
+# Step 2 - enable the 'xz' compression option.
+sed -i "s/.*CONFIG_KERNEL_XZ.*/CONFIG_KERNEL_XZ=y/" /build/linux-4.20.12/.config
+# Enable the VESA framebuffer for graphics support.
+sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" /build/linux-4.20.12/.config
+# Disable debug symbols in kernel => smaller kernel binary.
+sed -i "s/^CONFIG_DEBUG_KERNEL.*/\\# CONFIG_DEBUG_KERNEL is not set/" /build/linux-4.20.12/.config
+# Enable the EFI stub
+sed -i "s/.*CONFIG_EFI_STUB.*/CONFIG_EFI_STUB=y/" /build/linux-4.20.12/.config
+# Request that the firmware clear the contents of RAM after reboot (4.14+).
+echo "CONFIG_RESET_ATTACK_MITIGATION=y" >> /build/linux-4.20.12/.config
+# Disable Apple Properties (Useful for Macs but useless in general)
+echo "CONFIG_APPLE_PROPERTIES=n" >> /build/linux-4.20.12/.config
+# Enable the mixed EFI mode when building 64-bit kernel.
+echo "CONFIG_EFI_MIXED=y" >> /build/linux-4.20.12/.config
+make -j$PARALLEL_JOBS ARCH=x86_64 -C /build/linux-4.20.12 bzImage
+cp /build/linux-4.20.12/arch/x86/boot/bzImage /boot/bzImage
+rm -rf /build/linux-4.20.12

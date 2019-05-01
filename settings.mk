@@ -7,3 +7,4 @@ export OUTPUT_DIR := $(WORKSPACE_DIR)/out
 export BUILD_DIR := $(OUTPUT_DIR)/build
 export ROOTFS_DIR := $(OUTPUT_DIR)/rootfs
 export TOOLS_DIR := $(ROOTFS_DIR)/tools
+export IMAGES_DIR := $(OUTPUT_DIR)/images

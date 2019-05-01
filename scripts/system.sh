@@ -97,40 +97,40 @@ done
 
 total_time=$(timer)
 
-# sudo umount -f $ROOTFS_DIR/dev/pts $ROOTFS_DIR/dev $ROOTFS_DIR/proc $ROOTFS_DIR/sys $ROOTFS_DIR/run || /bin/true
-# sudo rm -rf $ROOTFS_DIR
-# mkdir -v $ROOTFS_DIR
-#
-# step "Decompress Toolchain"
-# extract $PREBUILT_DIR/x86_64-lfs-linux-toolchain.tar.xz $ROOTFS_DIR
-# cp -v $SCRIPTS_DIR/build.sh $ROOTFS_DIR
-# cp -Rv $SOURCES_DIR $ROOTFS_DIR/sources
-#
-# step "# 6.2. Preparing Virtual Kernel File Systems"
-# mkdir -pv $ROOTFS_DIR/{dev,proc,sys,run}
-# sudo mknod -m 600 $ROOTFS_DIR/dev/console c 5 1
-# sudo mknod -m 666 $ROOTFS_DIR/dev/null c 1 3
-# sudo mount -v --bind /dev $ROOTFS_DIR/dev
-# sudo mount -vt devpts devpts $ROOTFS_DIR/dev/pts -o gid=5,mode=620
-# sudo mount -vt proc proc $ROOTFS_DIR/proc
-# sudo mount -vt sysfs sysfs $ROOTFS_DIR/sys
-# sudo mount -vt tmpfs tmpfs $ROOTFS_DIR/run
-# if [ -h $ROOTFS_DIR/dev/shm ]; then
-#   mkdir -pv $ROOTFS_DIR/$(readlink $ROOTFS_DIR/dev/shm)
-# fi
-#
-# step "# 6.4. Entering the Chroot Environment"
-# sudo chroot "$ROOTFS_DIR" \
-# /tools/bin/env -i \
-# HOME=/root \
-# TERM="$TERM" \
-# PS1='[Linux From Scratch Build] $ ' \
-# PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
-# /build.sh --login +h
+sudo umount -f $ROOTFS_DIR/dev/pts $ROOTFS_DIR/dev $ROOTFS_DIR/proc $ROOTFS_DIR/sys $ROOTFS_DIR/run || /bin/true
+sudo rm -rf $ROOTFS_DIR
+mkdir -v $ROOTFS_DIR
+
+step "Decompress Toolchain"
+extract $PREBUILT_DIR/x86_64-lfs-linux-toolchain.tar.xz $ROOTFS_DIR
+cp -v $SCRIPTS_DIR/build.sh $ROOTFS_DIR
+cp -Rv $SOURCES_DIR $ROOTFS_DIR/sources
+
+step "# 6.2. Preparing Virtual Kernel File Systems"
+mkdir -pv $ROOTFS_DIR/{dev,proc,sys,run}
+sudo mknod -m 600 $ROOTFS_DIR/dev/console c 5 1
+sudo mknod -m 666 $ROOTFS_DIR/dev/null c 1 3
+sudo mount -v --bind /dev $ROOTFS_DIR/dev
+sudo mount -vt devpts devpts $ROOTFS_DIR/dev/pts -o gid=5,mode=620
+sudo mount -vt proc proc $ROOTFS_DIR/proc
+sudo mount -vt sysfs sysfs $ROOTFS_DIR/sys
+sudo mount -vt tmpfs tmpfs $ROOTFS_DIR/run
+if [ -h $ROOTFS_DIR/dev/shm ]; then
+  mkdir -pv $ROOTFS_DIR/$(readlink $ROOTFS_DIR/dev/shm)
+fi
+
+step "# 6.4. Entering the Chroot Environment"
+sudo chroot "$ROOTFS_DIR" \
+/tools/bin/env -i \
+HOME=/root \
+TERM="$TERM" \
+PS1='[Linux From Scratch Build] $ ' \
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
+/build.sh --login +h
 
 step "# 6.79. Cleaning Up"
 sudo umount -f $ROOTFS_DIR/dev/pts $ROOTFS_DIR/dev $ROOTFS_DIR/proc $ROOTFS_DIR/sys $ROOTFS_DIR/run || /bin/true
-rm -rf $ROOTFS_DIR/tmp/* $ROOTFS_DIR/build $ROOTFS_DIR/tools $ROOTFS_DIR/build.sh
+rm -rf $ROOTFS_DIR/tmp/* $ROOTFS_DIR/build $ROOTFS_DIR/tools $ROOTFS_DIR/sources $ROOTFS_DIR/build.sh
 sudo chown -R `whoami`:`whoami` $ROOTFS_DIR
 
 step "7.2. General Network Configuration"
@@ -231,6 +231,18 @@ tmpfs		/run		tmpfs	mode=0755,nosuid,nodev	0	0
 sysfs		/sys		sysfs	defaults	0	0
 # End /etc/fstab
 EOF
+
+step "Create system image"
+mkdir -pv $IMAGES_DIR
+echo '#!/bin/sh' > $BUILD_DIR/_fakeroot.fs
+echo "set -e" >> $BUILD_DIR/_fakeroot.fs
+echo "chown -h -R 0:0 $ROOTFS_DIR" >> $BUILD_DIR/_fakeroot.fs
+echo "/sbin/mkfs.ext2 -d $ROOTFS_DIR $IMAGES_DIR/rootfs.ext2 2600M" >> $BUILD_DIR/_fakeroot.fs
+chmod a+x $BUILD_DIR/_fakeroot.fs
+fakeroot -- $BUILD_DIR/_fakeroot.fs
+
+step "Create bzImage"
+mv -v $ROOTFS_DIR/boot/bzImage $IMAGES_DIR/bzImage
 
 echo -e "----------------------------------------------------"
 echo -e "\nYou made it! This is the end of chapter 6!"
